@@ -1,5 +1,6 @@
 {
     "scale": 0.5,
     "font": 2.0,
-    "restTime": 30.0
+    "restTime": 30.0,
+    "enableAI": false
 }
