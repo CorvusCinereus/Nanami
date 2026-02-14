@@ -21,7 +21,7 @@ xmake
 {
     "scale": 0.5, # 桌宠缩放比例
     "font": 2.0, # 字体缩放比例
-    "restTime": 30.0, # 提醒休息的间隔时长
+    "restTime": 30.0, # 提醒休息的间隔时长(分钟)
     "enableAI": false # 是否启用AI对话功能
 }
 ```
