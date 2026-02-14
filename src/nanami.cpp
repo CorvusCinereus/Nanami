@@ -216,12 +216,13 @@ void Nanami::draw_menu() {
         m_Status = SpeakOrSing;
         m_DrawMenu = false;
 
-        int index = 2;// GetRandomValue(1, 7);
+        int index = GetRandomValue(1, 8);
         switch (index) {
         case 2:
             m_Texture = &m_Images[3];
             break;
         case 4:
+        case 8:
             m_Texture = &m_Images[6];
             break;
         default:
