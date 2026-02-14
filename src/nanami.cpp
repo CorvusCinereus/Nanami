@@ -265,6 +265,14 @@ void Nanami::draw_menu() {
         case 8:
             m_Texture = &m_Images[6];
             break;
+        case 5:
+        case 1:
+            m_Texture = &m_Images[1];
+            break;
+        case 7:
+        case 6:
+            m_Texture = &m_Images[2];
+            break;
         default:
             m_Texture = &m_Images[0];
         }
