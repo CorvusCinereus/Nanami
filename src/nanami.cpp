@@ -299,6 +299,12 @@ void Nanami::draw_menu() {
         m_DrawMusicMenu = true;
     }
 
+    if (m_Status == SpeakOrSing && ImGui::Button("停止")) {
+        StopMusicStream(m_Music);
+        UnloadMusicStream(m_Music);
+        m_Status = Normal;
+    }
+
     if (m_EnableAI) {
         if (!m_Chatting && ImGui::Button("对话")) {
             m_Chatting = true;
