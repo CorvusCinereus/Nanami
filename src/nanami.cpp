@@ -168,7 +168,22 @@ void Nanami::run() {
                 if (std::fabs(GetMusicTimeLength(m_Music) - GetMusicTimePlayed(m_Music)) < 0.2) {
                     StopMusicStream(m_Music);
                     UnloadMusicStream(m_Music);
-                    m_Status = Normal;
+
+                    if (m_MusicMod) {
+                        static int count = 0;
+                        ++count;
+                        if (count != m_Musics.size()) {
+                            m_Music = LoadMusicStream(m_Musics[count].c_str());
+                            PlayMusicStream(m_Music);
+                        } else {
+                            count = 0;
+                            m_Status = Normal;
+                            m_Texture = &m_Images[0];
+                        }
+                    } else {
+                        m_Status = Normal;
+                        m_Texture = &m_Images[0];
+                    }
                 }
                 break;
             default:
@@ -253,6 +268,16 @@ void Nanami::draw_music_menu() {
         m_DrawMenu = false;
 
         m_Music = LoadMusicStream(m_Musics[GetRandomValue(0, m_Musics.size() - 1)].c_str());
+        PlayMusicStream(m_Music);
+    }
+
+    if (ImGui::Button("列表")) {
+        m_MusicMod = 1;
+        m_Status = SpeakOrSing;
+        m_DrawMusicMenu = false;
+        m_DrawMenu = false;
+
+        m_Music = LoadMusicStream(m_Musics[0].c_str());
         PlayMusicStream(m_Music);
     }
 
