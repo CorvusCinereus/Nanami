@@ -19,7 +19,7 @@ using namespace cc;
 
 extern void getGlobalMousePosition(float& x, float& y);
 
-Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_Status(Normal), m_DrawMenu(false), m_DrawMusicMenu(false) {
+Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_Status(Normal), m_DrawMenu(false), m_DrawMusicMenu(false), m_RestTime(1800.0), m_LastRest(0.0) {
     std::string data = "";
     nlohmann::json json;
 
@@ -34,6 +34,8 @@ Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_S
         try {
             json = nlohmann::json::parse(data);
             m_Scale = json["scale"];
+            m_RestTime = json["restTime"];
+            m_RestTime *= 60.0;
         } catch (nlohmann::json::parse_error& e) {
             std::cerr << e.what() << std::endl;
             std::exit(1);
@@ -106,6 +108,7 @@ Nanami::~Nanami() {
 void Nanami::run() {
     float mousePosX, mousePosY;
     Vector2 dragOffset = {0, 0};
+    bool reset = false;
 
     while (!WindowShouldClose()) {
         getGlobalMousePosition(mousePosX, mousePosY);
@@ -156,6 +159,24 @@ void Nanami::run() {
         if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON))
             m_DrawMenu = !m_DrawMenu;
 
+        if (std::fabs(m_RestTime - GetTime() + m_LastRest) < 0.1) {
+            if (IsMusicStreamPlaying(m_Music)) {
+                StopMusicStream(m_Music);
+                UnloadMusicStream(m_Music);
+            }
+            m_Music = LoadMusicStream("assets/voice/rest.wav");
+            PlayMusicStream(m_Music);
+            m_Status = SpeakOrSing;
+            reset = true;
+            m_Texture = &m_Images[2];
+            if (m_CursorFollow) {
+                m_CursorFollow = false;
+                m_Scale *= 3.0;
+                SetWindowSize(WINDOW_WIDTH * m_Scale, WINDOW_HEIGHT * m_Scale);
+            }
+        }
+
+        // 绘制
         BeginDrawing();
 
         ClearBackground(BLANK);
@@ -181,6 +202,10 @@ void Nanami::run() {
                             m_Texture = &m_Images[0];
                         }
                     } else {
+                        if (reset) {
+                            reset = false;
+                            m_LastRest = GetTime();
+                        }
                         m_Status = Normal;
                         m_Texture = &m_Images[0];
                     }

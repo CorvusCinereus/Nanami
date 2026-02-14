@@ -21,6 +21,8 @@ public:
 
 private:
     float m_Scale;
+    double m_RestTime;
+    double m_LastRest;
     unsigned char m_MusicMod;
     bool m_IsDragging;
     bool m_CursorFollow;
