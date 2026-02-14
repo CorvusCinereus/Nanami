@@ -45,13 +45,13 @@ AI::AI() : m_History("") {
         file.close();
     }
 
-    std::ifstream aemeath("aemeath.txt");
-    if (aemeath.is_open()) {
+    std::ifstream nanami("nanami.txt");
+    if (nanami.is_open()) {
         std::string buffer;
-        while (std::getline(aemeath, buffer)) {
+        while (std::getline(nanami, buffer)) {
             m_History += buffer;
         }
-        aemeath.clear();
+        nanami.close();
     }
 }
 
