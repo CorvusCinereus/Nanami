@@ -37,7 +37,7 @@ using namespace cc;
 
 extern void getGlobalMousePosition(float& x, float& y);
 
-Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_Status(SpeakOrSing), m_DrawMenu(false), m_DrawMusicMenu(false), m_RestTime(1800.0), m_LastRest(0.0), m_EnableAI(false), m_Chatting(false) {
+Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_Status(SpeakOrSing), m_DrawMenu(false), m_DrawMusicMenu(false), m_RestTime(1800.0), m_LastRest(0.0), m_EnableAI(false), m_Chatting(false), m_MusicMod(0) {
     std::string data = "";
     nlohmann::json json;
 
@@ -102,7 +102,7 @@ Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_S
     { // musics
         for (const auto& entry : std::filesystem::directory_iterator("assets/musics")) {
             if (entry.is_regular_file()) {
-                m_Musics.push_back(entry.path().string().c_str());
+                m_Musics.push_back(entry.path().string());
             }
         }
     }
@@ -217,25 +217,11 @@ void Nanami::run() {
                     StopMusicStream(m_Music);
                     UnloadMusicStream(m_Music);
 
-                    if (m_MusicMod) {
-                        static int count = 0;
-                        ++count;
-                        if (count != m_Musics.size()) {
-                            m_Music = LoadMusicStream(m_Musics[count].c_str());
-                            PlayMusicStream(m_Music);
-                        } else {
-                            count = 0;
-                            m_Status = Normal;
-                            m_Texture = &m_Images[0];
-                        }
-                    } else {
-                        if (reset) {
-                            reset = false;
-                            m_LastRest = GetTime();
-                        }
-                        m_Status = Normal;
-                        m_Texture = &m_Images[0];
+                    if (reset) {
+                        m_LastRest = GetTime();
+                        reset = false;
                     }
+                    m_Status = Normal;
                 }
                 break;
             default:
@@ -329,24 +315,31 @@ void Nanami::draw_menu() {
 void Nanami::draw_music_menu() {
     ImGui::Begin("播放模式");
 
-    if (ImGui::Button("随机")) {
-        m_MusicMod = 0;
-        m_Status = SpeakOrSing;
-        m_DrawMusicMenu = false;
-        m_DrawMenu = false;
+    if (!m_MusicMod) {
+        if (ImGui::Button("随机")) {
+            m_MusicMod = 0;
+            m_Status = SpeakOrSing;
+            m_DrawMusicMenu = false;
+            m_DrawMenu = false;
 
-        m_Music = LoadMusicStream(m_Musics[GetRandomValue(0, m_Musics.size() - 1)].c_str());
-        PlayMusicStream(m_Music);
-    }
+            m_Music = LoadMusicStream(m_Musics[GetRandomValue(0, m_Musics.size() - 1)].c_str());
+            PlayMusicStream(m_Music);
+        }
 
-    if (ImGui::Button("列表")) {
-        m_MusicMod = 1;
-        m_Status = SpeakOrSing;
-        m_DrawMusicMenu = false;
-        m_DrawMenu = false;
-
-        m_Music = LoadMusicStream(m_Musics[0].c_str());
-        PlayMusicStream(m_Music);
+        if (ImGui::Button("列表")) {
+            m_MusicMod = 1;
+        }
+    } else {
+        for (const auto& i : m_Musics) {
+            if (ImGui::Button(i.substr(14).c_str())) {
+                m_Music = LoadMusicStream(i.c_str());
+                PlayMusicStream(m_Music);
+                m_MusicMod = 0;
+                m_DrawMenu = false;
+                m_DrawMusicMenu = false;
+                m_Status = SpeakOrSing;
+            }
+        }
     }
 
     if (ImGui::Button("取消")) {
