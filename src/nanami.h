@@ -5,6 +5,8 @@
 #include <raylib.h>
 #include <string>
 #include <vector>
+#include <memory>
+#include "ai.h"
 
 namespace cc {
 
@@ -29,7 +31,9 @@ private:
     bool m_CursorFollow;
     bool m_DrawMenu;
     bool m_DrawMusicMenu;
+    bool m_Chatting;
     std::vector<std::string> m_Musics;
+    std::unique_ptr<cc::AI> m_AI;
 
     Status m_Status;
 
@@ -41,6 +45,7 @@ private:
     void cursor_follow();
     void draw_menu();
     void draw_music_menu();
+    void chat();
 };
 
 }

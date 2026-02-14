@@ -1,12 +1,13 @@
 #include "nanami.h"
 #include "json.hpp"
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <future>
 #include <iostream>
-#include <ostream>
 #include <string>
 #include <raylib.h>
 #include <rlImGui.h>
@@ -19,7 +20,7 @@ using namespace cc;
 
 extern void getGlobalMousePosition(float& x, float& y);
 
-Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_Status(SpeakOrSing), m_DrawMenu(false), m_DrawMusicMenu(false), m_RestTime(1800.0), m_LastRest(0.0), m_EnableAI(false) {
+Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_Status(SpeakOrSing), m_DrawMenu(false), m_DrawMusicMenu(false), m_RestTime(1800.0), m_LastRest(0.0), m_EnableAI(false), m_Chatting(false) {
     std::string data = "";
     nlohmann::json json;
 
@@ -87,6 +88,9 @@ Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_S
         }
     }
 
+    if (m_EnableAI)
+        m_AI = std::make_unique<cc::AI>();
+
     m_Music = LoadMusicStream("assets/voice/greet.wav");
     PlayMusicStream(m_Music);
 
@@ -118,7 +122,7 @@ void Nanami::run() {
         getGlobalMousePosition(mousePosX, mousePosY);
 
         // 拖拽
-        if (!m_DrawMenu && CheckCollisionPointRec(GetMousePosition(), {0, 0, WINDOW_WIDTH * m_Scale, WINDOW_HEIGHT * m_Scale})) {
+        if (!m_DrawMenu && !m_Chatting && CheckCollisionPointRec(GetMousePosition(), {0, 0, WINDOW_WIDTH * m_Scale, WINDOW_HEIGHT * m_Scale})) {
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
                 m_IsDragging = true;
@@ -144,7 +148,7 @@ void Nanami::run() {
         }
 
         // 鼠标跟随
-        if (IsKeyPressed(KEY_BACKSPACE)) {
+        if (IsKeyPressed(KEY_BACKSPACE) && !m_Chatting) {
             m_CursorFollow = !m_CursorFollow;
             if (m_CursorFollow) {
                 m_Scale /= 3.0;
@@ -223,15 +227,17 @@ void Nanami::run() {
             cursor_follow();
 
         DrawTextureEx(*m_Texture, {0, 0}, 0.0, m_Scale, WHITE);
-        if (m_DrawMenu) {
+        if (m_DrawMenu || m_Chatting) {
             rlImGuiBegin();
             ImGui::PushFont(m_Font);
 
-            if (m_DrawMusicMenu) {
+            if (m_DrawMusicMenu)
                 draw_music_menu();
-            } else {
+
+            if (m_DrawMenu && !m_DrawMusicMenu)
                 draw_menu();
-            }
+
+            if (m_Chatting) chat();
 
             ImGui::PopFont();
             rlImGuiEnd();
@@ -288,8 +294,14 @@ void Nanami::draw_menu() {
         m_DrawMusicMenu = true;
     }
 
-    if (m_EnableAI && ImGui::Button("对话")) {
-        // TODO
+    if (m_EnableAI) {
+        if (!m_Chatting && ImGui::Button("对话")) {
+            m_Chatting = true;
+            m_DrawMenu = false;
+        } else if (m_Chatting && ImGui::Button("结束对话")) {
+            m_Chatting = false;
+            m_DrawMenu = false;
+        }
     }
 
     ImGui::End();
@@ -316,6 +328,44 @@ void Nanami::draw_music_menu() {
 
         m_Music = LoadMusicStream(m_Musics[0].c_str());
         PlayMusicStream(m_Music);
+    }
+
+    if (ImGui::Button("取消")) {
+        m_DrawMusicMenu = false;
+    }
+
+    ImGui::End();
+}
+
+void Nanami::chat() {
+    static std::string respone = "";
+
+    ImGui::Begin("对话");
+
+    static char buffer[2048] = {0};
+    static std::future<void> fut;
+    static bool waiting = false;
+
+    if (waiting && fut.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
+        fut.get();
+        waiting = false;
+    }
+
+    if (respone.empty())
+        ImGui::InputTextMultiline("", buffer, IM_ARRAYSIZE(buffer));
+    else if (waiting)
+        ImGui::Text("等待回复中...");
+    else
+        ImGui::TextWrapped(respone.c_str());
+
+    if (respone.empty() && !waiting && ImGui::Button("发送")) {
+        fut = std::async(std::launch::async, [this] {
+                m_AI->chat(respone, buffer);
+                });
+        waiting = true;
+    } else if (!respone.empty() && ImGui::Button("继续对话")) {
+        respone.clear();
+        memset(buffer, 0, sizeof(buffer));
     }
 
     ImGui::End();
