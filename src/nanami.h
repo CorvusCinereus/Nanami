@@ -25,6 +25,7 @@ private:
     double m_LastRest;
     unsigned char m_MusicMod;
     bool m_IsDragging;
+    bool m_EnableAI;
     bool m_CursorFollow;
     bool m_DrawMenu;
     bool m_DrawMusicMenu;

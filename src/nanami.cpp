@@ -19,7 +19,7 @@ using namespace cc;
 
 extern void getGlobalMousePosition(float& x, float& y);
 
-Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_Status(Normal), m_DrawMenu(false), m_DrawMusicMenu(false), m_RestTime(1800.0), m_LastRest(0.0) {
+Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_Status(SpeakOrSing), m_DrawMenu(false), m_DrawMusicMenu(false), m_RestTime(1800.0), m_LastRest(0.0), m_EnableAI(false) {
     std::string data = "";
     nlohmann::json json;
 
@@ -36,6 +36,7 @@ Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_S
             m_Scale = json["scale"];
             m_RestTime = json["restTime"];
             m_RestTime *= 60.0;
+            m_EnableAI = json["enableAI"];
         } catch (nlohmann::json::parse_error& e) {
             std::cerr << e.what() << std::endl;
             std::exit(1);
@@ -85,6 +86,9 @@ Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_S
             }
         }
     }
+
+    m_Music = LoadMusicStream("assets/voice/greet.wav");
+    PlayMusicStream(m_Music);
 
     SetWindowPosition(GetMonitorWidth(0) - GetScreenWidth(), GetMonitorHeight(0) - GetScreenHeight());
 }
@@ -284,7 +288,7 @@ void Nanami::draw_menu() {
         m_DrawMusicMenu = true;
     }
 
-    if (ImGui::Button("对话")) {
+    if (m_EnableAI && ImGui::Button("对话")) {
         // TODO
     }
 
