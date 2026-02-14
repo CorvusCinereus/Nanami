@@ -18,6 +18,20 @@
 #ifndef _NANAMI_H_
 #define _NANAMI_H_
 
+// 防止Windows宏污染
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX  // 防止min/max宏
+#define NOGDI     // 禁用GDI宏，包括Rectangle
+#define NOUSER    // 禁用USER宏
+#include <windows.h>
+#undef Rectangle
+#undef CloseWindow
+#undef ShowCursor
+#undef LoadImage
+#undef DrawText
+#endif
+
 #include <imgui.h>
 #include <raylib.h>
 #include <string>
