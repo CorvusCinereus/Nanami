@@ -59,6 +59,8 @@ Nanami::Nanami() : m_Scale(0.7), m_IsDragging(false), m_CursorFollow(false), m_S
             std::cerr << e.what() << std::endl;
             std::exit(1);
         }
+        
+        configFile.close();
     } else {
         std::exit(1);
     }
