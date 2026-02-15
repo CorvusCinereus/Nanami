@@ -169,6 +169,8 @@ void Nanami::run() {
         // 鼠标跟随
         if (IsKeyPressed(KEY_BACKSPACE) && !m_Chatting) {
             m_CursorFollow = !m_CursorFollow;
+            m_DrawMenu = false;
+            m_DrawMusicMenu = false;
             if (m_CursorFollow) {
                 m_Scale /= 3.0;
                 SetWindowSize(720 * m_Scale, 584 * m_Scale);
@@ -350,6 +352,7 @@ void Nanami::draw_music_menu() {
 
     if (ImGui::Button("取消")) {
         m_DrawMusicMenu = false;
+        m_MusicMod = 0;
     }
 
     ImGui::End();
